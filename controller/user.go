@@ -42,7 +42,7 @@ func Login(c *gin.Context) {
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
 		panic(err)
 	}
-	err := database.GetUser(requestBody.Username, requestBody.Password)
+	QueriedUser, err := database.GetUser(requestBody.Username, requestBody.Password)
 
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -50,7 +50,7 @@ func Login(c *gin.Context) {
 		})
 		return
 	}
-	tokenString, err := auth.GenerateJWT(requestBody.Username)
+	tokenString, err := auth.GenerateJWT(QueriedUser.Id, requestBody.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed generate token",

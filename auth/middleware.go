@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -28,6 +29,7 @@ func VerifyJWT(c *gin.Context) {
 	})
 
 	if err != nil || !token.Valid {
+		log.Printf("JWT error: %v | valid: %v", err, token.Valid)
 		err_mess := fmt.Sprintf(err.Error(), !token.Valid)
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": err_mess,
@@ -35,6 +37,7 @@ func VerifyJWT(c *gin.Context) {
 		c.Abort()
 		return
 	}
+	c.Set("username", claims["username"])
 	c.Set("user_id", claims["user_id"])
 	c.Next()
 

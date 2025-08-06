@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -29,6 +30,31 @@ func HttpUpgrader(c *gin.Context) {
 		return
 	}
 	defer conn.Close()
+	user_id, exists := c.Get("user_id")
+	if !exists {
+		log.Println("failed to retrieve user_id")
+	}
+	connections[user_id.(string)] = conn
+	messages, err := database.GetPendingMessage(user_id.(string))
+
+	if err != nil {
+		log.Println(err.Error())
+	}
+	for _, message := range messages {
+		jsonMessage, err := json.Marshal(message)
+		if err != nil {
+			log.Println("error when marshalling message", err)
+		}
+		err = conn.WriteMessage(websocket.TextMessage, jsonMessage)
+		if err != nil {
+			log.Println("error when writing message: ", err.Error())
+			return
+		}
+		err = database.UpdateMessageStatus(message.Id)
+		if err != nil {
+			log.Println(err.Error())
+		}
+	}
 	for {
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
@@ -44,16 +70,16 @@ func HttpUpgrader(c *gin.Context) {
 			log.Println("error when unmarshalling the message:", err.Error())
 			break
 		}
-		// parsed_message.Id = uuid.New().String()
+		parsed_message.Id = uuid.New().String()
+		parsed_message.SenderId = user_id.(string)
 		parsed_message.Timestamp = utils.Generate_time()
-		parsed_message.Status = "Pending"
-		user_id, exists := c.Get("user_id")
-		if !exists {
-			log.Println("failed to retrieve user_id")
-			break
-		}
-		connections[user_id.(string)] = conn
+		parsed_message.Status = "pending"
 		receiver := parsed_message.ReceiverId
+		jsonToSend, err := json.Marshal(parsed_message)
+		// fmt.Println("this is parsed message", parsed_message)
+		if err != nil {
+			log.Println("error when marshalling parsed_message", err.Error())
+		}
 		err = database.InsertMessage(parsed_message)
 		if err != nil {
 			log.Println("error inserting message:", err.Error())
@@ -61,16 +87,16 @@ func HttpUpgrader(c *gin.Context) {
 		}
 		receiverConn, exist := connections[receiver]
 		if exist {
-			
-			err = receiverConn.WriteMessage(mt, message)
+
+			err = receiverConn.WriteMessage(mt, jsonToSend)
 			if err != nil {
 				log.Println("read message error: ", err.Error())
 				break
 			}
 		}
-		// 
+		//
 
 	}
 }
 
-func HandleWebSocketConnection(conn *websocket.Conn)
+// func HandleWebSocketConnection(conn *websocket.Conn){}

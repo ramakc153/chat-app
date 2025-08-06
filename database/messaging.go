@@ -15,10 +15,43 @@ type DBMessage struct {
 }
 
 func InsertMessage(data DBMessage) error {
-	_, err := DB.Exec("INSERT INTO messages (id, sender_id, receiver_id, message_content, timestamp, status) VALUES (gen_random_uuid(), $1, $2, $3, NOW(), $4)",
+	_, err := DB.Exec("INSERT INTO messages (sender_id, receiver_id, message_content, timestamp, status) VALUES ($1, $2, $3, NOW(), $4)",
 		data.SenderId, data.ReceiverId, data.Content, data.Status)
 	if err != nil {
-		return fmt.Errorf("users duplicate")
+		return fmt.Errorf(err.Error())
+	}
+	return nil
+}
+
+func GetPendingMessage(receiver_id string) ([]DBMessage, error) {
+	var QueriedMessage []DBMessage
+	rows, err := DB.Query("SELECT * FROM messages WHERE receiver_id=$1 AND status='pending'", receiver_id)
+
+	if err != nil {
+		return nil, fmt.Errorf("error when trying to get message: %s", err.Error())
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		eachMessage := DBMessage{}
+		err = rows.Scan(&eachMessage.Id, &eachMessage.SenderId, &eachMessage.ReceiverId, &eachMessage.Content, &eachMessage.Timestamp, &eachMessage.Status)
+		if err != nil {
+			return nil, fmt.Errorf(err.Error())
+		}
+		QueriedMessage = append(QueriedMessage, eachMessage)
+	}
+	if len(QueriedMessage) == 0 {
+		return nil, fmt.Errorf("no messages found")
+	}
+	return QueriedMessage, nil
+}
+
+func UpdateMessageStatus(message_id string) error {
+	fmt.Println("update message function triggered")
+	_, err := DB.Exec("UPDATE messages SET status='delivered' WHERE id=$1", message_id)
+	if err != nil {
+		return fmt.Errorf("error when updating message status: %s", err.Error())
 	}
 	return nil
 }

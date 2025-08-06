@@ -8,7 +8,7 @@ import (
 )
 
 func ViewProfile(c *gin.Context) {
-	user_id, exists := c.Get("user_id")
+	username, exists := c.Get("username")
 	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "user id not found",
@@ -17,7 +17,7 @@ func ViewProfile(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "profile page visited",
-		"user_id": user_id,
+		"user_id": username,
 	})
 	return
 }

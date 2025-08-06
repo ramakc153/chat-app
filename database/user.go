@@ -27,17 +27,17 @@ func InsertUser(username, password string) error {
 	return nil
 }
 
-func GetUser(username, password string) error {
+func GetUser(username, password string) (*User, error) {
 	var QueriedUser User
 	if err := DB.QueryRow(
 		"SELECT id, username, password FROM users WHERE username=$1", username,
 	).Scan(&QueriedUser.Id, &QueriedUser.Username, &QueriedUser.Password); err != nil {
-		return fmt.Errorf("User not found")
+		return nil, fmt.Errorf("User not found")
 	}
 	err := bcrypt.CompareHashAndPassword([]byte(QueriedUser.Password), []byte(password))
 	if err != nil {
-		return fmt.Errorf("wrong password")
+		return nil, fmt.Errorf("wrong password")
 	}
 
-	return nil
+	return &QueriedUser, nil
 }
