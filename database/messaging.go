@@ -48,10 +48,32 @@ func GetPendingMessage(receiver_id string) ([]DBMessage, error) {
 }
 
 func UpdateMessageStatus(message_id string) error {
-	fmt.Println("update message function triggered")
 	_, err := DB.Exec("UPDATE messages SET status='delivered' WHERE id=$1", message_id)
 	if err != nil {
 		return fmt.Errorf("error when updating message status: %s", err.Error())
 	}
 	return nil
+}
+
+func GetMessageByUser(sender_id, receiver_id string) ([]DBMessage, error) {
+	var messages []DBMessage
+	rows, err := DB.Query("SELECT * FROM messages WHERE (sender_id=$1 AND receiver_id=$2) OR (sender_id=$2 AND receiver_id=$1 ORDER BY timestamp ASC)", sender_id, receiver_id)
+	if err != nil {
+		return nil, fmt.Errorf("error when get message by user: %s", err.Error())
+	}
+	for rows.Next() {
+		var message DBMessage
+
+		err = rows.Scan(&message.Id, &message.SenderId, &message.ReceiverId, &message.Content, &message.Timestamp, &message.Status)
+		if err != nil {
+			return nil, fmt.Errorf("error when scanning message: %s", err.Error())
+		}
+		messages = append(messages, message)
+	}
+
+	if len(messages) == 0 {
+		return messages, nil
+	}
+	return messages, nil
+
 }
