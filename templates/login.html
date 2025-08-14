@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+</head>
+<body>
+    <h1>Login page</h1>
+
+     <form id="loginForm">
+        <label for="username">username:</label><br>
+        <input type="text" id="username" name="username"><br>
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password">
+        <button type="submit">Login</button>
+    </form> 
+    
+</body>
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async(event)=>{
+        event.preventDefault()
+
+        const usernameInput = document.getElementById("username")
+        const passwordInput = document.getElementById("password")
+
+        const formData = {
+            "username": usernameInput.value,
+            "password": passwordInput.value 
+        }
+
+        try{
+            const response = await fetch("/login",{
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(formData),
+            })
+
+            if (response.ok){
+                let result = await response.text()
+                console.log("Fetch succesful: ", result)
+
+                let jsonResult = JSON.parse(result)
+                console.log(jsonResult.token)
+                localStorage.setItem("token", jsonResult.token)
+                window.location.href = "/chat"
+            } else{
+                let errorText = await response.text()
+                console.log("got error: ", errorText)
+                window.location.href = "/wrong"
+            }
+        }
+        catch(error){
+            console.log("error occured: ", error)
+        }
+    })
+</script>
+</html>

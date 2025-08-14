@@ -30,6 +30,7 @@ func HttpUpgrader(c *gin.Context) {
 		return
 	}
 	defer conn.Close()
+	// load all pending messages
 	user_id, exists := c.Get("user_id")
 	if !exists {
 		log.Println("failed to retrieve user_id")
@@ -56,6 +57,7 @@ func HttpUpgrader(c *gin.Context) {
 		}
 	}
 	for {
+		// wait for the incoming messages
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
 			log.Println("read message error: ", err.Error())
@@ -85,6 +87,7 @@ func HttpUpgrader(c *gin.Context) {
 			log.Println("error inserting message:", err.Error())
 			break
 		}
+		// send message to receiver
 		receiverConn, exist := connections[receiver]
 		if exist {
 

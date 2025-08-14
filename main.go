@@ -3,6 +3,7 @@ package main
 import (
 	"chat-app/auth"
 	"chat-app/controller"
+	"chat-app/views"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,8 +15,11 @@ func main() {
 			"message": "pong",
 		})
 	})
+	r.LoadHTMLGlob("templates/*")
 	r.POST("/register", controller.Register)
+	r.GET("/login", views.LoadLoginPage)
 	r.POST("/login", controller.Login)
+	r.GET("/chat", views.ChatPage)
 
 	protected := r.Group("/")
 	protected.Use(auth.VerifyJWT)
