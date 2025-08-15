@@ -30,5 +30,15 @@
     </div>
 </body>
 <script>
+    const token = localStorage.getItem("token")
+    // console.log("this is token ", token)
+    if (!token){
+        console.log("token missing")
+        window.location.href = "/login"
+    }
+
+    let socket = new WebSocket(`ws://localhost:5000/ws?token=${token}`)
+    // socket.onopen
+    // console.log("after connected to websocket")
 </script>
 </html>

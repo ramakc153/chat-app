@@ -43,7 +43,7 @@
                 console.log("Fetch succesful: ", result)
 
                 let jsonResult = JSON.parse(result)
-                console.log(jsonResult.token)
+                // console.log(jsonResult.token)
                 localStorage.setItem("token", jsonResult.token)
                 window.location.href = "/chat"
             } else{
