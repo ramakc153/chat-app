@@ -49,7 +49,7 @@
             } else{
                 let errorText = await response.text()
                 console.log("got error: ", errorText)
-                window.location.href = "/wrong"
+                alert("Credential invalid. Please try again.")
             }
         }
         catch(error){
