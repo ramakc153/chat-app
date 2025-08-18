@@ -4,7 +4,6 @@ import (
 	"chat-app/database"
 	"chat-app/utils"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -24,8 +23,6 @@ var upgrader = websocket.Upgrader{
 var connections = make(map[string]*websocket.Conn)
 
 func HttpUpgrader(c *gin.Context) {
-	userToken := c.Query("token")
-	fmt.Println("this is user token: ", userToken)
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println("Http upgrader error: ", err.Error())

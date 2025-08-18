@@ -37,8 +37,23 @@
         window.location.href = "/login"
     }
 
-    let socket = new WebSocket(`ws://localhost:5000/ws?token=${token}`)
+    let socket = new WebSocket(`ws://localhost:5000/ws`, ["Bearer", token])
     // socket.onopen
-    // console.log("after connected to websocket")
+    socket.onopen = function(event) {
+        console.log("Websocket connected successfully")
+    }
+
+    socket.onerror = function(event){
+        console.log("WEbscoket error: ", event)
+
+        console.log("authentication failed. Redirect to login page")
+        window.location.href = "/login"
+    }
+
+    socket.onclose = function(event){
+        console.log("Websocket disconnected.")
+    }
+    console.log("after connected to websocket")
+    console.log("this is token: ", token)
 </script>
 </html>
