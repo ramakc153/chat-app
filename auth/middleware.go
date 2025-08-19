@@ -10,6 +10,13 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+func JwtParsing(tokenStr string, claims jwt.MapClaims) (*jwt.Token, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtsecret, nil
+	})
+	return token, err
+}
+
 func VerifyJWT(c *gin.Context) {
 	tokenStr := c.GetHeader("Authorization")
 	if tokenStr == "" {
@@ -24,11 +31,10 @@ func VerifyJWT(c *gin.Context) {
 	tokenStr = strings.TrimSpace(tokenStr)
 	claims := jwt.MapClaims{}
 
-	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtsecret, nil
-	})
+	token, err := JwtParsing(tokenStr, claims)
 
 	if err != nil || !token.Valid {
+
 		log.Printf("JWT error: %v | valid: %v", err, token.Valid)
 		err_mess := fmt.Sprintf(err.Error(), !token.Valid)
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -36,6 +42,7 @@ func VerifyJWT(c *gin.Context) {
 		})
 		c.Abort()
 		return
+
 	}
 	c.Set("username", claims["username"])
 	c.Set("user_id", claims["user_id"])

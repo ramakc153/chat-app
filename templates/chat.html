@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat-UI</title>
+</head>
+<body>
+    <div class="app-container">
+        <div id="user-list-panel">
+            <ul class="user-list">
+                <li class="user-item" data-user-id="1">
+                    <a href="#"> John Doe</a>
+                </li>
+                <li class="user-item" data-user-id="2">
+                    <a href="#">doamian joe</a>
+                </li>
+                <li class="user-item" data-user-id="3">
+                    <a href="#">lorem ipsum</a>
+                </li>
+            </ul>
+        </div>
+        <div id="chat-window-panel">
+            <div id="chat-messages"></div>
+            <div id="message-input-area">
+                <input type="text" name="message-input" id="message-input">
+                <button type="button" id="send-button" name="send-button">Send </button>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    const token = localStorage.getItem("token")
+    // console.log("this is token ", token)
+    if (!token){
+        console.log("token missing")
+        window.location.href = "/login"
+    }
+
+    let socket = new WebSocket(`ws://localhost:5000/ws`, ["Bearer", token])
+    // socket.onopen
+    socket.onopen = function(event) {
+        console.log("Websocket connected successfully")
+    }
+
+    socket.onerror = function(event){
+        console.log("WEbscoket error: ", event)
+
+        console.log("authentication failed. Redirect to login page")
+        window.location.href = "/login"
+    }
+
+    socket.onclose = function(event){
+        console.log("Websocket disconnected.")
+    }
+    console.log("after connected to websocket")
+    console.log("this is token: ", token)
+</script>
+</html>
