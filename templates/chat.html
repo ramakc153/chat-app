@@ -9,11 +9,11 @@
     <div class="app-container">
         <div id="user-list-panel">
             <ul class="user-list">
-                <li class="user-item" data-user-id="1">
-                    <a href="#"> John Doe</a>
+                <li class="user-item" data-user-id="0b6d672f-bb8b-4206-a12f-a7a4d28a37dc">
+                    <a href="#"> user1client</a>
                 </li>
-                <li class="user-item" data-user-id="2">
-                    <a href="#">doamian joe</a>
+                <li class="user-item" data-user-id="9e5a7c58-d1c7-4c92-8d86-4cb83ee8517e">
+                    <a href="#">john doe</a>
                 </li>
                 <li class="user-item" data-user-id="3">
                     <a href="#">lorem ipsum</a>
@@ -30,6 +30,11 @@
     </div>
 </body>
 <script>
+    const chatMessages = document.getElementById("chat-messages")
+    const messageInput = document.getElementById("message-input")
+    const sendButton = document.getElementById("send-button")
+    let selectedUserId = null
+
     const token = localStorage.getItem("token")
     // console.log("this is token ", token)
     if (!token){
@@ -38,7 +43,6 @@
     }
 
     let socket = new WebSocket(`ws://localhost:5000/ws`, ["Bearer", token])
-    // socket.onopen
     socket.onopen = function(event) {
         console.log("Websocket connected successfully")
     }
@@ -50,9 +54,57 @@
         window.location.href = "/login"
     }
 
+    // for incoming messages
+    socket.onmessage = function(event){
+        let parsedMessage = JSON.parse(event.data) 
+        console.log(parsedMessage)
+        const msgDiv = document.createElement("div")
+        msgDiv.textContent = `From ${parsedMessage.sender_id}: ${parsedMessage.content}`
+        chatMessages.appendChild(msgDiv)
+    }
+
     socket.onclose = function(event){
         console.log("Websocket disconnected.")
     }
+
+    // select user to chat
+    document.querySelectorAll(".user-item").forEach(item =>{
+        item.addEventListener("click", () => {
+            selectedUserId = item.getAttribute("data-user-id")
+            console.log("chatting with user: ", selectedUserId)
+            chatMessages.innerHTML = ""
+        })
+    })
+
+    //send message
+    sendButton.addEventListener("click", ()=>{
+        if (!selectedUserId){
+            console.log("No user or invalid user")
+            alert("select user first")
+            return
+        }
+
+        const message = messageInput.value.trim()
+        if (message=="") return
+
+        const msgObj = {
+            receiver_id: selectedUserId,
+            content: message
+        }
+
+        socket.send(JSON.stringify(msgObj))
+
+        const msgDiv = document.createElement("div")
+        msgDiv.textContent = `Me: ${message}`
+        chatMessages.appendChild(msgDiv)
+
+        messageInput.value = "";
+
+    })
+
+    messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendButton.click();
+    })
     console.log("after connected to websocket")
     console.log("this is token: ", token)
 </script>
