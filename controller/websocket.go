@@ -28,7 +28,9 @@ var upgrader = websocket.Upgrader{
 }
 
 // var connections = make(map[string]*websocket.Conn)
-var connections Connections
+var connections Connections = Connections{
+	M: make(map[string]*websocket.Conn),
+}
 
 func HttpUpgrader(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -36,7 +38,6 @@ func HttpUpgrader(c *gin.Context) {
 		log.Println("Http upgrader error: ", err.Error())
 		return
 	}
-	defer conn.Close()
 	// load all pending messages
 	user_id, exists := c.Get("user_id")
 	if !exists {
@@ -73,6 +74,7 @@ func HttpUpgrader(c *gin.Context) {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Println("read message error: ", err.Error())
 			}
+			defer conn.Close()
 			connections.Lock()
 			delete(connections.M, user_id.(string))
 			connections.Unlock()
@@ -86,7 +88,7 @@ func HttpUpgrader(c *gin.Context) {
 		err = json.Unmarshal(message, &parsed_message)
 		if err != nil {
 			log.Println("error when unmarshalling the message:", err.Error())
-			break
+			continue
 		}
 		parsed_message.Id = uuid.New().String()
 		parsed_message.SenderId = user_id.(string)
@@ -101,7 +103,7 @@ func HttpUpgrader(c *gin.Context) {
 		err = database.InsertMessage(parsed_message)
 		if err != nil {
 			log.Println("error inserting message:", err.Error())
-			break
+			continue
 		}
 		// send message to receiver
 		receiverConn, exist := connections.M[receiver]
@@ -110,7 +112,11 @@ func HttpUpgrader(c *gin.Context) {
 			err = receiverConn.WriteMessage(mt, jsonToSend)
 			if err != nil {
 				log.Println("read message error: ", err.Error())
-				break
+				continue
+			}
+			err = database.UpdateMessageStatus(parsed_message.Id)
+			if err != nil {
+				log.Println("error after receiver writemessage: ", err.Error())
 			}
 		}
 		//
