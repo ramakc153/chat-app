@@ -22,7 +22,7 @@
         </div>
         <div id="chat-window-panel">
             <div id="chat-messages"></div>
-            <div id="message-input-area">
+            <div style="position: fixed; bottom: 20px; right: 50%;" id="message-input-area">
                 <input type="text" name="message-input" id="message-input">
                 <button type="button" id="send-button" name="send-button">Send </button>
             </div>
@@ -34,8 +34,9 @@
     const messageInput = document.getElementById("message-input")
     const sendButton = document.getElementById("send-button")
     let selectedUserId = null
-
+    
     const token = localStorage.getItem("token")
+    const user_id = localStorage.getItem("user_id")
     // console.log("this is token ", token)
     if (!token){
         console.log("token missing")
@@ -69,10 +70,38 @@
 
     // select user to chat
     document.querySelectorAll(".user-item").forEach(item =>{
-        item.addEventListener("click", () => {
+        item.addEventListener("click", async () => {
             selectedUserId = item.getAttribute("data-user-id")
             console.log("chatting with user: ", selectedUserId)
             chatMessages.innerHTML = ""
+
+            const response = await fetch(`/messages/${selectedUserId}`, {
+                headers: {
+                    Authorization: "Bearer "+ token
+                }
+            })
+            if (response.ok){
+                let result = await response.json()
+                console.log("this is response messages: ", result)
+                responseData = result.data
+                for (let data of responseData){
+                    let user = data.sender_id
+                    let messageContent = data.content
+                    const msgDiv = document.createElement("div")
+                    if (data.sender_id != user_id){
+                        msgDiv.style.textAlign = "right"
+                    } else{
+                        msgDiv.style.textAlign = "left"
+                    }
+                    msgDiv.textContent = `From ${user}: ${messageContent}`
+                    chatMessages.appendChild(msgDiv)
+
+                }
+
+            } else{
+                let errorText = await response.text()
+                console.log("got an error when fetching user chat: ", errorText)
+            }
         })
     })
 

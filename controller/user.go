@@ -57,8 +57,10 @@ func Login(c *gin.Context) {
 		})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login success",
 		"token":   tokenString,
+		"user_id": QueriedUser.Id,
 	})
 }
