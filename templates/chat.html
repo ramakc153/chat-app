@@ -61,7 +61,6 @@
             console.log("got an error when fetching users", result)
         } else{
             let result = await response.json()
-            console.log(result)
             let users = result.data
             for (let user of users){
                 let userLi = document.createElement("li")
