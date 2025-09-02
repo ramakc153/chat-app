@@ -12,6 +12,11 @@ type User struct {
 	Password string
 }
 
+type UserResponse struct {
+	Id       string `json:"id"`
+	Username string `json:"username"`
+}
+
 func InsertUser(username, password string) error {
 	hashed_password, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -40,4 +45,23 @@ func GetUser(username, password string) (*User, error) {
 	}
 
 	return &QueriedUser, nil
+}
+
+func GetAllUsers(username string) ([]UserResponse, error) {
+	rows, err := DB.Query("SELECT id, username FROM users WHERE username != $1", username)
+	if err != nil {
+		return nil, fmt.Errorf("error when querying all users: %s", err)
+	}
+	var users []UserResponse
+
+	for rows.Next() {
+		var user UserResponse
+
+		err = rows.Scan(&user.Id, &user.Username)
+		if err != nil {
+			return nil, fmt.Errorf("error when scanning getallusers: %s", err)
+		}
+		users = append(users, user)
+	}
+	return users, nil
 }

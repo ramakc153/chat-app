@@ -26,6 +26,7 @@ func main() {
 	protected.Use(auth.VerifyJWT)
 	protected.GET("/profile", controller.ViewProfile)
 	protected.GET("/messages/:user_id", controller.GetChatHistory)
+	protected.GET("users", controller.GetUsers)
 	r.Run("localhost:5000") // listen and serve on 0.0.0.0:8080
 	// gin.HandlerFunc(controller.Abracadabra)
 }
