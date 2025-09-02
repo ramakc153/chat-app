@@ -57,7 +57,7 @@ func UpdateMessageStatus(message_id string) error {
 
 func GetMessageByUser(sender_id, receiver_id string) ([]DBMessage, error) {
 	var messages []DBMessage
-	rows, err := DB.Query("SELECT * FROM messages WHERE (sender_id=$1 AND receiver_id=$2) OR (sender_id=$2 AND receiver_id=$1 ORDER BY timestamp ASC)", sender_id, receiver_id)
+	rows, err := DB.Query("SELECT * FROM messages WHERE (sender_id=$1 AND receiver_id=$2) OR (sender_id=$2 AND receiver_id=$1) ORDER BY timestamp ASC", sender_id, receiver_id)
 	if err != nil {
 		return nil, fmt.Errorf("error when get message by user: %s", err.Error())
 	}

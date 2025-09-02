@@ -8,8 +8,8 @@
 <body>
     <div class="app-container">
         <div id="user-list-panel">
-            <ul class="user-list">
-                <li class="user-item" data-user-id="0b6d672f-bb8b-4206-a12f-a7a4d28a37dc">
+            <ul class="user-list" id="user-list">
+                <!-- <li class="user-item" data-user-id="0b6d672f-bb8b-4206-a12f-a7a4d28a37dc">
                     <a href="#"> user1client</a>
                 </li>
                 <li class="user-item" data-user-id="9e5a7c58-d1c7-4c92-8d86-4cb83ee8517e">
@@ -17,12 +17,12 @@
                 </li>
                 <li class="user-item" data-user-id="3">
                     <a href="#">lorem ipsum</a>
-                </li>
+                </li> -->
             </ul>
         </div>
         <div id="chat-window-panel">
             <div id="chat-messages"></div>
-            <div id="message-input-area">
+            <div style="position: fixed; bottom: 20px; right: 50%;" id="message-input-area">
                 <input type="text" name="message-input" id="message-input">
                 <button type="button" id="send-button" name="send-button">Send </button>
             </div>
@@ -33,9 +33,11 @@
     const chatMessages = document.getElementById("chat-messages")
     const messageInput = document.getElementById("message-input")
     const sendButton = document.getElementById("send-button")
+    const userList = document.getElementById("user-list")
     let selectedUserId = null
-
+    
     const token = localStorage.getItem("token")
+    const user_id = localStorage.getItem("user_id")
     // console.log("this is token ", token)
     if (!token){
         console.log("token missing")
@@ -45,6 +47,30 @@
     let socket = new WebSocket(`ws://localhost:5000/ws`, ["Bearer", token])
     socket.onopen = function(event) {
         console.log("Websocket connected successfully")
+    }
+
+    window.onload = async function(event){
+        let response = await fetch("/users",{
+            headers:{
+                Authorization: "Bearer " + token
+            }
+        })
+
+        if (!response.ok){
+            let result = await response.text()
+            console.log("got an error when fetching users", result)
+        } else{
+            let result = await response.json()
+            console.log(result)
+            let users = result.data
+            for (let user of users){
+                let userLi = document.createElement("li")
+                userLi.className = "user-item"
+                userLi.dataset.userId = user.id
+                userLi.innerHTML = `<a href="#">${user.username}</a>`
+                userList.append(userLi)
+            }
+        }
     }
 
     socket.onerror = function(event){
@@ -69,10 +95,38 @@
 
     // select user to chat
     document.querySelectorAll(".user-item").forEach(item =>{
-        item.addEventListener("click", () => {
+        item.addEventListener("click", async () => {
             selectedUserId = item.getAttribute("data-user-id")
             console.log("chatting with user: ", selectedUserId)
             chatMessages.innerHTML = ""
+
+            const response = await fetch(`/messages/${selectedUserId}`, {
+                headers: {
+                    Authorization: "Bearer "+ token
+                }
+            })
+            if (response.ok){
+                let result = await response.json()
+                console.log("this is response messages: ", result)
+                responseData = result.data
+                for (let data of responseData){
+                    let user = data.sender_id
+                    let messageContent = data.content
+                    const msgDiv = document.createElement("div")
+                    if (data.sender_id != user_id){
+                        msgDiv.style.textAlign = "right"
+                    } else{
+                        msgDiv.style.textAlign = "left"
+                    }
+                    msgDiv.textContent = `From ${user}: ${messageContent}`
+                    chatMessages.appendChild(msgDiv)
+
+                }
+
+            } else{
+                let errorText = await response.text()
+                console.log("got an error when fetching user chat: ", errorText)
+            }
         })
     })
 

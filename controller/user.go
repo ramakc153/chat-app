@@ -3,6 +3,7 @@ package controller
 import (
 	"chat-app/auth"
 	"chat-app/database"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -57,8 +58,30 @@ func Login(c *gin.Context) {
 		})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login success",
 		"token":   tokenString,
+		"user_id": QueriedUser.Id,
 	})
+}
+
+func GetUsers(c *gin.Context) {
+	username, exist := c.Get("username")
+	if !exist {
+		log.Println("failed to get user_id")
+	}
+	users, err := database.GetAllUsers(username.(string))
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "got error when getallusers",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "all users found",
+		"data":    users,
+	})
+	return
 }

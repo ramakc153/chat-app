@@ -45,6 +45,7 @@
                 let jsonResult = JSON.parse(result)
                 // console.log(jsonResult.token)
                 localStorage.setItem("token", jsonResult.token)
+                localStorage.setItem("user_id", jsonResult.user_id)
                 window.location.href = "/chat"
             } else{
                 let errorText = await response.text()
