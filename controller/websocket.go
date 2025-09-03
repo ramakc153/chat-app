@@ -38,7 +38,7 @@ func HttpUpgrader(c *gin.Context) {
 		log.Println("Http upgrader error: ", err.Error())
 		return
 	}
-	// load all pending messages
+	// load all pending messages (self)
 	user_id, exists := c.Get("user_id")
 	if !exists {
 		log.Println("failed to retrieve user_id")
@@ -68,7 +68,7 @@ func HttpUpgrader(c *gin.Context) {
 		}
 	}
 	for {
-		// wait for the incoming messages
+		// wait for the incoming messages (self)
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
@@ -105,7 +105,7 @@ func HttpUpgrader(c *gin.Context) {
 			log.Println("error inserting message:", err.Error())
 			continue
 		}
-		// send message to receiver
+		// send message to receiver (to another user)
 		receiverConn, exist := connections.M[receiver]
 		if exist {
 
