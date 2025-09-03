@@ -16,6 +16,7 @@ func main() {
 		})
 	})
 	r.LoadHTMLGlob("templates/*")
+	r.Static("/static", "./static")
 	r.POST("/register", controller.Register)
 	r.GET("/login", views.LoadLoginPage)
 	r.POST("/login", controller.Login)

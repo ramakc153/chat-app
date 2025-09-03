@@ -1,0 +1,17 @@
+.left-bubble{
+    display: inline-block;
+    background-color: pink;
+    border-radius: 10px;
+    margin: 5px;
+    padding: 10px;
+    max-width: 500px;
+}
+
+.right-bubble{
+    display: inline-block;
+    background-color: green;
+    border-radius: 10px;
+    margin: 5px;
+    padding: 10px;
+    max-width: 500px;
+}
