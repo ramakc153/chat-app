@@ -21,7 +21,7 @@
                 </li> -->
             </ul>
         </div>
-        <div id="chat-window-panel">
+        <div id="chat-window-panel" style="overflow-y: scroll;">
             <div id="chat-messages"></div>
             <div style="position: fixed; bottom: 20px; right: 50%;" id="message-input-area">
                 <input type="text" name="message-input" id="message-input">
@@ -76,7 +76,18 @@
         }
         wrapperDiv.appendChild(msgDiv)
         chatMessages.append(wrapperDiv)
-        window.scrollTo(0, document.body.scrollHeight);
+        if (wrapperDiv){
+            wrapperDiv.scrollIntoView({
+                behavior: "smooth",
+                block:"end",
+            })
+        }
+        // const chatWindow = document.getElementById("chat-window-panel")
+        // if (chatWindow){
+        //     console.log("chat window loaded")
+        //     chatWindow.scrollTop = chatWindow.scrollHeight
+        // }
+        // window.scrollTo(0, document.body.scrollHeight);
 
     }
     // list all users
