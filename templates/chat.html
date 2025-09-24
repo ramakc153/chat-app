@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/css/chat.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat-UI</title>
 </head>
@@ -20,7 +21,7 @@
                 </li> -->
             </ul>
         </div>
-        <div id="chat-window-panel">
+        <div id="chat-window-panel" style="overflow-y: scroll;">
             <div id="chat-messages"></div>
             <div style="position: fixed; bottom: 20px; right: 50%;" id="message-input-area">
                 <input type="text" name="message-input" id="message-input">
@@ -55,25 +56,38 @@
         let wrapperDiv = document.createElement("div")
         wrapperDiv.style.textAlign = position
         if (position == "left"){
-            msgDiv.style.display = "inline-block";
-            msgDiv.style.backgroundColor = "pink";
-            msgDiv.style.borderRadius = "10px";
-            msgDiv.style.margin = "5px";
-            msgDiv.style.padding = "10px";
-            msgDiv.style.maxWidth = "500px"; // Use max-width here as well
+            msgDiv.className = "left-bubble"
+            // msgDiv.style.display = "inline-block";
+            // msgDiv.style.backgroundColor = "pink";
+            // msgDiv.style.borderRadius = "10px";
+            // msgDiv.style.margin = "5px";
+            // msgDiv.style.padding = "10px";
+            // msgDiv.style.maxWidth = "500px"; // Use max-width here as well
             msgDiv.textContent = `From ${user}: ${messageContent}`;
         } else if (position == "right"){
-            msgDiv.style.display = "inline-block";
-            msgDiv.style.backgroundColor = "green";
-            msgDiv.style.padding = "10px";
-            msgDiv.style.margin = "5px";
-            msgDiv.style.borderRadius = "10px";
-            msgDiv.style.maxWidth = "500px"; // Use max-width for better responsiveness
+            msgDiv.className = "right-bubble"
+            // msgDiv.style.display = "inline-block";
+            // msgDiv.style.backgroundColor = "green";
+            // msgDiv.style.padding = "10px";
+            // msgDiv.style.margin = "5px";
+            // msgDiv.style.borderRadius = "10px";
+            // msgDiv.style.maxWidth = "500px"; // Use max-width for better responsiveness
             msgDiv.textContent = `me: ${messageContent}`;
         }
         wrapperDiv.appendChild(msgDiv)
         chatMessages.append(wrapperDiv)
-        window.scrollTo(0, document.body.scrollHeight);
+        if (wrapperDiv){
+            wrapperDiv.scrollIntoView({
+                behavior: "smooth",
+                block:"end",
+            })
+        }
+        // const chatWindow = document.getElementById("chat-window-panel")
+        // if (chatWindow){
+        //     console.log("chat window loaded")
+        //     chatWindow.scrollTop = chatWindow.scrollHeight
+        // }
+        // window.scrollTo(0, document.body.scrollHeight);
 
     }
     // list all users
