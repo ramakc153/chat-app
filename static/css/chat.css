@@ -4,7 +4,10 @@
     border-radius: 10px;
     margin: 5px;
     padding: 10px;
+    padding-bottom: 20px;
+    padding-right: 20px;
     max-width: 500px;
+    position: relative;
 }
 
 .right-bubble{
@@ -13,9 +16,16 @@
     border-radius: 10px;
     margin: 5px;
     padding: 10px;
+    padding-bottom: 20px;
+    padding-right: 20px;
     max-width: 500px;
+    position: relative;
 }
 
 .date{
     font-size: 10px;
+    color: gray;
+    position: absolute;
+    bottom: 3px;
+    right: 10px;
 }
