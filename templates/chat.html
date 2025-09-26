@@ -51,7 +51,7 @@
         console.log("Websocket connected successfully")
     }
 
-    function addBubble(position, user, messageContent){
+    function addBubble(position, user, messageContent, timestamp){
         const msgDiv = document.createElement("div")
         let wrapperDiv = document.createElement("div")
         wrapperDiv.style.textAlign = position
@@ -63,7 +63,8 @@
             // msgDiv.style.margin = "5px";
             // msgDiv.style.padding = "10px";
             // msgDiv.style.maxWidth = "500px"; // Use max-width here as well
-            msgDiv.textContent = `From ${user}: ${messageContent}`;
+            // msgDiv.textContent = `From ${user}: ${messageContent}`;
+            msgDiv.innerHTML = `From ${user}: ${messageContent} <span class="date">${timestamp}</span>`;
         } else if (position == "right"){
             msgDiv.className = "right-bubble"
             // msgDiv.style.display = "inline-block";
@@ -72,7 +73,8 @@
             // msgDiv.style.margin = "5px";
             // msgDiv.style.borderRadius = "10px";
             // msgDiv.style.maxWidth = "500px"; // Use max-width for better responsiveness
-            msgDiv.textContent = `me: ${messageContent}`;
+            // msgDiv.textContent = `me: ${messageContent}`;
+            msgDiv.innerHTML = `me: ${messageContent} <span class="date">${timestamp}</span>`
         }
         wrapperDiv.appendChild(msgDiv)
         chatMessages.append(wrapperDiv)
@@ -90,6 +92,20 @@
         // window.scrollTo(0, document.body.scrollHeight);
 
     }
+
+    function getDate(timestamp){
+        const dateObject = new Date(timestamp)
+        const year = dateObject.getFullYear()
+        const month = dateObject.getMonth() + 1
+        const day = dateObject.getDate()
+
+        const hours = dateObject.getHours()
+        const minutes = dateObject.getMinutes()
+
+        const formattedDate = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,"0")}`
+        const formattedTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2,"0")}`
+        return formattedDate+" "+formattedTime
+    }
     // list all users
     window.onload = async function(event){
         let response = await fetch("/users",{
@@ -102,6 +118,7 @@
             let result = await response.text()
             console.log("got an error when fetching users", result)
         } else{
+            // fetch user list
             let result = await response.json()
             let users = result.data
             for (let user of users){
@@ -119,6 +136,7 @@
                             Authorization: "Bearer "+ token
                         }
                     })
+                    // fetch messages
                     if (response.ok){
                         let result = await response.json()
                         console.log("this is response messages: ", result)
@@ -128,10 +146,10 @@
                             let messageContent = data.content
                             const msgDiv = document.createElement("div")
                             let wrapperDiv = document.createElement("div");
+                            let formattedTimestamp = getDate(data.timestamp)
 
                             if (data.sender_id == user_id) {
-
-                                addBubble("right", "", messageContent)
+                                addBubble("right", "", messageContent, formattedTimestamp)
                                 
                                 // wrapperDiv.style.textAlign = "right";
                                 
@@ -143,7 +161,7 @@
                                 // msgDiv.style.maxWidth = "500px"; // Use max-width for better responsiveness
                                 // msgDiv.textContent = `me: ${messageContent}`;
                             } else {
-                                addBubble("left", user, messageContent)
+                                addBubble("left", user, messageContent, formattedTimestamp)
                                 // wrapperDiv.style.textAlign = "left";
                                 // msgDiv.style.display = "inline-block";
                                 // msgDiv.style.backgroundColor = "pink";
@@ -183,7 +201,9 @@
     socket.onmessage = function(event){
         let parsedMessage = JSON.parse(event.data) 
         console.log(parsedMessage)
-        addBubble("left", parsedMessage.sender_id, parsedMessage.content)
+        let formattedTimestamp = getDate(parsedMessage.timestamp)
+        console.log(`this is timestamp for incoming message ${formattedTimestamp}`)
+        addBubble("left", parsedMessage.sender_id, parsedMessage.content, formattedTimestamp)
         // const msgDiv = document.createElement("div")
         // msgDiv.textContent = `From ${parsedMessage.sender_id}: ${parsedMessage.content}`
         // chatMessages.appendChild(msgDiv)
@@ -214,8 +234,12 @@
             content: message
         }
 
+        let sendDate = new Date()
+        let isoStringDate = sendDate.toISOString()
+        let formattedTimestamp = getDate(isoStringDate)
         socket.send(JSON.stringify(msgObj))
-        addBubble("right", "", message)
+
+        addBubble("right", "", message, formattedTimestamp)
         // const msgDiv = document.createElement("div")
         // msgDiv.textContent = `Me: ${message}`
         // chatMessages.appendChild(msgDiv)
