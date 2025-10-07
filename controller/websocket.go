@@ -105,7 +105,7 @@ func HttpUpgrader(c *gin.Context) {
 			log.Println("error inserting message:", err.Error())
 			continue
 		}
-		// send message to receiver (to another user)
+		// send message to receiver (to another user) (if the receiver is online)
 		receiverConn, exist := connections.M[receiver]
 		if exist {
 

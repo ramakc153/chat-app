@@ -51,7 +51,7 @@
         console.log("Websocket connected successfully")
     }
 
-    function addBubble(position, user, messageContent, timestamp){
+    function addBubble(position, messageObj, timestamp){
         const msgDiv = document.createElement("div")
         let wrapperDiv = document.createElement("div")
         wrapperDiv.style.textAlign = position
@@ -64,7 +64,7 @@
             // msgDiv.style.padding = "10px";
             // msgDiv.style.maxWidth = "500px"; // Use max-width here as well
             // msgDiv.textContent = `From ${user}: ${messageContent}`;
-            msgDiv.innerHTML = `From ${user}: ${messageContent} <span class="date">${timestamp}</span>`;
+            msgDiv.innerHTML = `From ${messageObj.sender_id}: ${messageObj.content} <span class="date">${timestamp}</span>`;
         } else if (position == "right"){
             msgDiv.className = "right-bubble"
             // msgDiv.style.display = "inline-block";
@@ -74,7 +74,7 @@
             // msgDiv.style.borderRadius = "10px";
             // msgDiv.style.maxWidth = "500px"; // Use max-width for better responsiveness
             // msgDiv.textContent = `me: ${messageContent}`;
-            msgDiv.innerHTML = `me: ${messageContent} <span class="date">${timestamp}</span>`
+            msgDiv.innerHTML = `me: ${messageObj.content} <span class="date">${timestamp}</span>`
         }
         wrapperDiv.appendChild(msgDiv)
         chatMessages.append(wrapperDiv)
@@ -149,7 +149,7 @@
                             let formattedTimestamp = getDate(data.timestamp)
 
                             if (data.sender_id == user_id) {
-                                addBubble("right", "", messageContent, formattedTimestamp)
+                                addBubble("right", data ,formattedTimestamp)
                                 
                                 // wrapperDiv.style.textAlign = "right";
                                 
@@ -161,7 +161,7 @@
                                 // msgDiv.style.maxWidth = "500px"; // Use max-width for better responsiveness
                                 // msgDiv.textContent = `me: ${messageContent}`;
                             } else {
-                                addBubble("left", user, messageContent, formattedTimestamp)
+                                addBubble("left", data, formattedTimestamp)
                                 // wrapperDiv.style.textAlign = "left";
                                 // msgDiv.style.display = "inline-block";
                                 // msgDiv.style.backgroundColor = "pink";
@@ -203,7 +203,7 @@
         console.log(parsedMessage)
         let formattedTimestamp = getDate(parsedMessage.timestamp)
         console.log(`this is timestamp for incoming message ${formattedTimestamp}`)
-        addBubble("left", parsedMessage.sender_id, parsedMessage.content, formattedTimestamp)
+        addBubble("left", parsedMessage, formattedTimestamp)
         // const msgDiv = document.createElement("div")
         // msgDiv.textContent = `From ${parsedMessage.sender_id}: ${parsedMessage.content}`
         // chatMessages.appendChild(msgDiv)
@@ -239,7 +239,7 @@
         let formattedTimestamp = getDate(isoStringDate)
         socket.send(JSON.stringify(msgObj))
 
-        addBubble("right", "", message, formattedTimestamp)
+        addBubble("right", msgObj, formattedTimestamp)
         // const msgDiv = document.createElement("div")
         // msgDiv.textContent = `Me: ${message}`
         // chatMessages.appendChild(msgDiv)
