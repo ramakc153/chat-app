@@ -74,7 +74,13 @@
             // msgDiv.style.borderRadius = "10px";
             // msgDiv.style.maxWidth = "500px"; // Use max-width for better responsiveness
             // msgDiv.textContent = `me: ${messageContent}`;
-            msgDiv.innerHTML = `me: ${messageObj.content} <span class="date">${timestamp}</span>`
+            if (messageObj.status == "pending"){
+                msgDiv.innerHTML = `me: ${messageObj.content} <span class="date">${timestamp}</span> <span class="pending-icon">⌛</span>`
+                
+            }else{
+                msgDiv.innerHTML = `me: ${messageObj.content} <span class="date">${timestamp}</span> <span class="pending-icon">✓</span>`
+
+            }
         }
         wrapperDiv.appendChild(msgDiv)
         chatMessages.append(wrapperDiv)
@@ -231,7 +237,8 @@
 
         const msgObj = {
             receiver_id: selectedUserId,
-            content: message
+            content: message,
+            status: "pending"
         }
 
         let sendDate = new Date()

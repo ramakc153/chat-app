@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -66,6 +65,7 @@ func HttpUpgrader(c *gin.Context) {
 		if err != nil {
 			log.Println(err.Error())
 		}
+		log.Printf("message %s updated for sender\n", message.Id)
 	}
 	for {
 		// wait for the incoming messages (self)
@@ -90,7 +90,7 @@ func HttpUpgrader(c *gin.Context) {
 			log.Println("error when unmarshalling the message:", err.Error())
 			continue
 		}
-		parsed_message.Id = uuid.New().String()
+		// parsed_message.Id = uuid.New().String()
 		parsed_message.SenderId = user_id.(string)
 		parsed_message.Timestamp = utils.Generate_time()
 		parsed_message.Status = "pending"
@@ -100,7 +100,7 @@ func HttpUpgrader(c *gin.Context) {
 		if err != nil {
 			log.Println("error when marshalling parsed_message", err.Error())
 		}
-		err = database.InsertMessage(parsed_message)
+		err = database.InsertMessage(&parsed_message)
 		if err != nil {
 			log.Println("error inserting message:", err.Error())
 			continue
@@ -118,6 +118,7 @@ func HttpUpgrader(c *gin.Context) {
 			if err != nil {
 				log.Println("error after receiver writemessage: ", err.Error())
 			}
+			log.Printf("message %s updated for receiver\n", parsed_message.Id)
 		}
 		//
 
