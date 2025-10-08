@@ -53,6 +53,7 @@
 
     function addBubble(position, messageObj, timestamp){
         const msgDiv = document.createElement("div")
+        msgDiv.dataset.msgId = messageObj.id
         let wrapperDiv = document.createElement("div")
         wrapperDiv.style.textAlign = position
         if (position == "left"){
@@ -206,10 +207,36 @@
     // for incoming messages
     socket.onmessage = function(event){
         let parsedMessage = JSON.parse(event.data) 
-        console.log(parsedMessage)
-        let formattedTimestamp = getDate(parsedMessage.timestamp)
-        console.log(`this is timestamp for incoming message ${formattedTimestamp}`)
-        addBubble("left", parsedMessage, formattedTimestamp)
+        if (parsedMessage.type == "status_update"){
+            console.log(`this is socketonmessage ${parsedMessage}`)
+            console.log(`this is socketonmessage type: ${parsedMessage.type}`)
+            console.log(`this is socketonmessage message_id: ${parsedMessage.message_id}`)
+            console.log(`this is the fake id: ${parsedMessage.fake_id}`)
+            let idToFind = parsedMessage.message_id
+            
+            console.log(`id to find: ${idToFind}`)
+            const bubble = document.querySelector(`[data-msg-id="${idToFind}"]`)
+            if (bubble){
+                console.log("bubble found")
+                bubble.dataset.msgId = parsedMessage.message_id
+                bubble.querySelector(".pending-icon").textContent = "✓"
+            } else{
+                console.log("bubble not found")
+            }
+        
+        }else if(parsedMessage.type == "message_id_update"){
+            const bubble = document.querySelector(`[data-msg-id="${parsedMessage.fake_id}"]`)
+            if (bubble){
+                console.log("bubble found")
+                bubble.dataset.msgId = parsedMessage.message_id
+            }
+        }else{
+            console.log(parsedMessage)
+            let formattedTimestamp = getDate(parsedMessage.timestamp)
+            console.log(`this is timestamp for incoming message ${formattedTimestamp}`)
+            addBubble("left", parsedMessage, formattedTimestamp)
+            
+        }
         // const msgDiv = document.createElement("div")
         // msgDiv.textContent = `From ${parsedMessage.sender_id}: ${parsedMessage.content}`
         // chatMessages.appendChild(msgDiv)
@@ -218,12 +245,12 @@
     socket.onclose = function(event){
         console.log("Websocket disconnected.")
     }
-
+    
     // select user to chat
     // document.querySelectorAll(".user-item").forEach(item =>{
         
     // })
-
+    
     //send message
     sendButton.addEventListener("click", ()=>{
         if (!selectedUserId){
@@ -231,11 +258,12 @@
             alert("select user first")
             return
         }
-
+        
         const message = messageInput.value.trim()
         if (message=="") return
-
+        const fakeId = "temp-" + Date.now()
         const msgObj = {
+            id: fakeId,
             receiver_id: selectedUserId,
             content: message,
             status: "pending"
@@ -245,8 +273,8 @@
         let isoStringDate = sendDate.toISOString()
         let formattedTimestamp = getDate(isoStringDate)
         socket.send(JSON.stringify(msgObj))
-
         addBubble("right", msgObj, formattedTimestamp)
+
         // const msgDiv = document.createElement("div")
         // msgDiv.textContent = `Me: ${message}`
         // chatMessages.appendChild(msgDiv)
