@@ -10,13 +10,26 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 type Connections struct {
 	sync.Mutex
 	M map[string]*websocket.Conn
+}
+
+type StatusUpdate struct {
+	Type      string `json:"type"`
+	MessageID string `json:"message_id"`
+	Status    string `json:"status"`
+	FakeID    string `json:"fake_id"`
+}
+
+type IncomingMessage struct {
+	FakeID     string `json:"id"`
+	ReceiverID string `json:"receiver_id"`
+	Content    string `json:"content"`
+	Status     string `json:"status"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -66,6 +79,19 @@ func HttpUpgrader(c *gin.Context) {
 		if err != nil {
 			log.Println(err.Error())
 		}
+
+		senderConn, ok := connections.M[message.SenderId]
+		if ok {
+			statusUpdate := StatusUpdate{
+				Type:      "status_update",
+				MessageID: message.Id,
+				Status:    "delivered",
+				FakeID:    "", // you won’t have fakeId here, unless you cached it
+			}
+			updateJson, _ := json.Marshal(statusUpdate)
+			senderConn.WriteMessage(websocket.TextMessage, updateJson)
+		}
+		log.Printf("message %s updated for sender\n", message.Id)
 	}
 	for {
 		// wait for the incoming messages (self)
@@ -84,28 +110,43 @@ func HttpUpgrader(c *gin.Context) {
 		}
 		log.Println("received message: ", string(message))
 
-		var parsed_message database.DBMessage
-		err = json.Unmarshal(message, &parsed_message)
+		var incoming IncomingMessage
+		err = json.Unmarshal(message, &incoming)
 		if err != nil {
 			log.Println("error when unmarshalling the message:", err.Error())
 			continue
 		}
-		parsed_message.Id = uuid.New().String()
-		parsed_message.SenderId = user_id.(string)
-		parsed_message.Timestamp = utils.Generate_time()
-		parsed_message.Status = "pending"
+		var parsed_message database.DBMessage = database.DBMessage{
+			SenderId:   user_id.(string),
+			ReceiverId: incoming.ReceiverID,
+			Content:    incoming.Content,
+			Timestamp:  utils.Generate_time(),
+			Status:     "pending",
+		}
+		// parsed_message.Id = uuid.New().String()
+		// parsed_message.SenderId = user_id.(string)
+		// parsed_message.Timestamp = utils.Generate_time()
+		// parsed_message.Status = "pending"
 		receiver := parsed_message.ReceiverId
 		jsonToSend, err := json.Marshal(parsed_message)
 		// fmt.Println("this is parsed message", parsed_message)
 		if err != nil {
 			log.Println("error when marshalling parsed_message", err.Error())
 		}
-		err = database.InsertMessage(parsed_message)
+		err = database.InsertMessage(&parsed_message)
 		if err != nil {
 			log.Println("error inserting message:", err.Error())
 			continue
 		}
-		// send message to receiver (to another user)
+		ack := StatusUpdate{
+			Type:      "message_id_update",
+			MessageID: parsed_message.Id,
+			Status:    "pending",       // keep pending
+			FakeID:    incoming.FakeID, // map fakeId
+		}
+		ackJson, _ := json.Marshal(ack)
+		conn.WriteMessage(mt, ackJson)
+		// send message to receiver (to another user) (if the receiver is online)
 		receiverConn, exist := connections.M[receiver]
 		if exist {
 
@@ -118,6 +159,23 @@ func HttpUpgrader(c *gin.Context) {
 			if err != nil {
 				log.Println("error after receiver writemessage: ", err.Error())
 			}
+			statusUpdateVar := StatusUpdate{
+				Type:      "status_update",
+				MessageID: parsed_message.Id,
+				Status:    "delivered",
+				FakeID:    incoming.FakeID,
+			}
+
+			jsonUpdate, err := json.Marshal(statusUpdateVar)
+			if err != nil {
+				log.Println("error when marshalling status updates: ", err.Error())
+			}
+			err = conn.WriteMessage(mt, jsonUpdate)
+			if err != nil {
+				log.Println("error when sending status updates: ", err.Error())
+
+			}
+			log.Printf("message %s updated for receiver\n", parsed_message.Id)
 		}
 		//
 

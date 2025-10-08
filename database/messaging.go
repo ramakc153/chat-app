@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -14,11 +15,11 @@ type DBMessage struct {
 	Status     string    `json:"status"`
 }
 
-func InsertMessage(data DBMessage) error {
-	_, err := DB.Exec("INSERT INTO messages (sender_id, receiver_id, message_content, timestamp, status) VALUES ($1, $2, $3, NOW(), $4)",
-		data.SenderId, data.ReceiverId, data.Content, data.Status)
+func InsertMessage(data *DBMessage) error {
+	err := DB.QueryRow("INSERT INTO messages (sender_id, receiver_id, message_content, timestamp, status) VALUES ($1, $2, $3,NOW(), $4) RETURNING id",
+		data.SenderId, data.ReceiverId, data.Content, data.Status).Scan(&data.Id)
 	if err != nil {
-		return fmt.Errorf(err.Error())
+		return fmt.Errorf("error when inserting messages: %s", err.Error())
 	}
 	return nil
 }
@@ -48,10 +49,15 @@ func GetPendingMessage(receiver_id string) ([]DBMessage, error) {
 }
 
 func UpdateMessageStatus(message_id string) error {
-	_, err := DB.Exec("UPDATE messages SET status='delivered' WHERE id=$1", message_id)
+	res, err := DB.Exec("UPDATE messages SET status='delivered' WHERE id=$1", message_id)
 	if err != nil {
 		return fmt.Errorf("error when updating message status: %s", err.Error())
 	}
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("no rows updated for message id: %s", message_id)
+	}
+	log.Println("log in DB. message update found with id: ", message_id)
 	return nil
 }
 
